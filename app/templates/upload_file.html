@@ -1,0 +1,58 @@
+{% extends "index.html" %}
+{% block content %}
+
+<div id="controls">
+    <form name="settings">
+        <div class="checkbox">
+            <label align="left">
+                <input type="checkbox" name="include_strongly_positive">Include Strongly Positive</input>
+            </label>
+        </div>
+        <div class="checkbox">
+            <label align="left">
+                <input type="checkbox" name="include_strongly_negative">Include Strongly Negative</input>
+            </label>
+        </div>
+        <input type="file" id="files" />
+    </form>
+</div>
+
+<div id="results"></div>
+
+<script>
+function handleFileSelect(selectEvent) {
+    var files = selectEvent.target.files; // Files selected by the user
+
+    for (var iter=0,file; file=selectEvent.target.files[iter]; iter++) {
+        var fileReader = new FileReader();
+        
+        fileReader.onload = function(fileEvent) {
+            data = JSON.stringify({
+                file_contents : fileEvent.target.result,
+                include_strongly_positive : document.forms["settings"]["include_strongly_positive"].checked,
+                include_strongly_negative : document.forms["settings"]["include_strongly_negative"].checked,
+                file : this.file.name
+            });
+
+            $.ajax({
+                type:        "POST",
+                url:         "/sentiment_analysis",
+                contentType: "application/json",
+                data:        data,
+                success:     function(data) {
+                    $("#results").html(data);
+                },
+                error:       function(data) {
+                    alert("Failed to parse file!");
+                }
+            });
+        }
+        fileReader.file = file;
+        fileReader.readAsText(file);
+    }
+}
+
+document.getElementById("files").addEventListener("change", handleFileSelect, false);
+</script>
+
+{% endblock %}
